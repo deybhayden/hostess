@@ -79,6 +79,9 @@ def main():
     grand_total, tagged_total, hosting_margin = "", 0, 0
 
     for result in sorted(results, key=lambda r: r.order):
+        # If the result is for the entire organization, it is considered
+        # the grand total for the time period and the hosting margin is calculated
+        # based on that total.
         if result.name == ORG_NAME and result.order == -1:
             grand_total = result.get_formatted_total()
             hosting_margin = result.total
