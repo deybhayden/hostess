@@ -8,6 +8,8 @@ import concurrent.futures
 import locale
 
 import boto3
+from rich.console import Console
+from rich.table import Table
 
 from config import ORG_NAME, CLIENT_DICT
 from utils import Client
@@ -72,6 +74,11 @@ async def get_cost_and_usage_for_clients(executor):
 
 def main():
     """Loop through Client tags for the given date range and print results."""
+    console = Console()
+    table = Table(show_header=True, header_style="bold magenta")
+    table.add_column("Client")
+    table.add_column("Total", justify="right")
+
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=10)
     event_loop = asyncio.get_event_loop()
 
@@ -90,17 +97,21 @@ def main():
             hosting_margin -= result.total
 
             if ARGS.verbose:
-                print(result.name, result.get_formatted_total())
+                table.add_row(result.name, result.get_formatted_total())
             else:
-                print(result.get_formatted_total())
+                console.print(result.get_formatted_total())
 
     if ARGS.verbose:
-        print()
+        console.print(table)
         tagged_average = locale.currency(tagged_total / len(CLIENT_DICT), grouping=True)
         formatted_margin = locale.currency(hosting_margin, grouping=True)
-        print(f"{ORG_NAME} - Total: {grand_total}")
-        print(f"{ORG_NAME} - Tagged Average: {tagged_average}")
-        print(f"{ORG_NAME} - Hosting Margin: {formatted_margin}")
+        console.print(f"{ORG_NAME} - Total: {grand_total}", style="bold green")
+        console.print(
+            f"{ORG_NAME} - Tagged Average: {tagged_average}", style="bold yellow"
+        )
+        console.print(
+            f"{ORG_NAME} - Hosting Margin: {formatted_margin}", style="bold red"
+        )
 
 
 if __name__ == "__main__":
