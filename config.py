@@ -8,7 +8,21 @@ ORG_NAME = "MegaCrew"
 # Example:
 #
 # CLIENTS = [
-#     Client("Example Co.", cur_filter={"Tags": {"Key": "client", "Values": ["example"]}}})
+#     Client("Example Co.", cur_filter={"Tags": {"Key": "client", "Values": ["example"]}}}),
+#     Client(
+#             name="Second INC.",
+#             cur_filter={
+#                 "Or": [
+#                     {"Tags": {"Key": "client", "Values": ["second"]}},
+#                     {
+#                         "Dimensions": {
+#                             "Key": "LINKED_ACCOUNT",
+#                             "Values": ["123456789101", "234567890123", "345678901234"],
+#                         }
+#                     },
+#                 ]
+#             },
+#         ),
 # ]
 #
 CLIENTS = []
