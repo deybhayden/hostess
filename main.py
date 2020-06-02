@@ -11,7 +11,7 @@ import boto3
 from rich.console import Console
 from rich.table import Table
 
-from config import ORG_NAME, CLIENT_DICT
+from config import ORG_NAME, CLIENTS
 from utils import Client
 
 locale.setlocale(locale.LC_ALL, "")
@@ -62,8 +62,8 @@ async def get_cost_and_usage_for_clients(executor):
     cur_func = create_cost_and_usage_function(Client(ORG_NAME, order=-1))
     blocking_tasks.append(loop.run_in_executor(executor, cur_func))
 
-    for order, (name, cur_filter) in enumerate(CLIENT_DICT.items()):
-        client = Client(name, order, cur_filter)
+    for order, client in enumerate(CLIENTS):
+        client.order = order
         cur_func = create_cost_and_usage_function(client)
         blocking_tasks.append(loop.run_in_executor(executor, cur_func))
 
@@ -103,7 +103,7 @@ def main():
 
     if ARGS.verbose:
         console.print(table)
-        tagged_average = locale.currency(tagged_total / len(CLIENT_DICT), grouping=True)
+        tagged_average = locale.currency(tagged_total / len(CLIENTS), grouping=True)
         formatted_margin = locale.currency(hosting_margin, grouping=True)
         console.print(f"{ORG_NAME} - Total: {grand_total}", style="bold green")
         console.print(

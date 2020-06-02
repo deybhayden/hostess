@@ -4,12 +4,14 @@ import os
 # Name used in analytics print outs
 ORG_NAME = "MegaCrew"
 
-# Client dictionary contains client name as the key with a CUR filter as the value
+# utils.Client object list containing client names as well as an optional CUR filter
 # Example:
 #
-#  {"Example Co.": {"Tags": {"Key": "client", "Values": ["example"]}}}
+# CLIENTS = [
+#     Client("Example Co.", cur_filter={"Tags": {"Key": "client", "Values": ["example"]}}})
+# ]
 #
-CLIENT_DICT = {}
+CLIENTS = []
 
 if os.path.exists("config_private.py"):
     # Use config_private for your own personal settings - default to be git ignored.
