@@ -23,6 +23,20 @@ ORG_NAME = "MegaCrew"
 #                 ]
 #             },
 #         ),
+#     Client(
+#         name="Third Inc. S3 Costs",
+#         cur_filter={
+#             "And": [
+#                 {"Tags": {"Key": "environment", "Values": ["third"]}},
+#                 {
+#                     "Dimensions": {
+#                         "Key": "SERVICE",
+#                         "Values": ["Amazon Simple Storage Service"],
+#                     }
+#                 },
+#             ]
+#         },
+#     ),
 # ]
 #
 CLIENTS = []
