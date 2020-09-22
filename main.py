@@ -63,6 +63,9 @@ async def get_cost_and_usage_for_clients(executor):
     blocking_tasks.append(loop.run_in_executor(executor, cur_func))
 
     for order, client in enumerate(CLIENTS):
+        if ARGS.client and client.name != ARGS.client:
+            continue
+
         client.order = order
         cur_func = create_cost_and_usage_function(client)
         blocking_tasks.append(loop.run_in_executor(executor, cur_func))
@@ -123,6 +126,9 @@ if __name__ == "__main__":
     )
     PARSER.add_argument(
         "-e", "--end-date", help="The End Date - format YYYY-MM-DD", required=True
+    )
+    PARSER.add_argument(
+        "-c", "--client", help="Report on a single Client"
     )
     PARSER.add_argument(
         "-v",
