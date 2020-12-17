@@ -37,7 +37,7 @@ def create_cost_and_usage_function(client):
                 Granularity="MONTHLY",
                 Metrics=["UnblendedCost"],
             )
-            client.total = get_cost_and_usage_total(metrics)
+            client.total_costs = get_cost_and_usage_total(metrics)
         elif client.cur_filter:
             metrics = explorer.get_cost_and_usage(
                 TimePeriod={"Start": ARGS.start_date, "End": ARGS.end_date},
@@ -45,9 +45,9 @@ def create_cost_and_usage_function(client):
                 Metrics=["UnblendedCost"],
                 Filter=client.cur_filter,
             )
-            client.total = get_cost_and_usage_total(metrics)
+            client.total_costs = get_cost_and_usage_total(metrics)
         else:
-            client.total = 0
+            client.total_costs = 0
 
         return client
 
@@ -80,41 +80,46 @@ def main():
     console = Console()
     table = Table(show_header=True, header_style="bold magenta")
     table.add_column("Client")
-    table.add_column("Total", justify="right")
+    table.add_column("Total Cost", justify="right")
+    table.add_column("Hosting Fee", justify="right")
+    table.add_column("Margin", justify="right")
 
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=10)
     event_loop = asyncio.get_event_loop()
 
     results = event_loop.run_until_complete(get_cost_and_usage_for_clients(executor))
-    grand_total, tagged_total, hosting_margin = "", 0, 0
+    grand_total, tagged_total, gap = "", 0, 0
 
     for result in sorted(results, key=lambda r: r.order):
         # If the result is for the entire organization, it is considered
         # the grand total for the time period and the hosting margin is calculated
         # based on that total.
         if result.name == ORG_NAME and result.order == -1:
-            grand_total = result.get_formatted_total()
-            hosting_margin = result.total
+            grand_total = result.get_formatted_total_costs()
+            gap = result.total_costs
         else:
-            tagged_total += result.total
-            hosting_margin -= result.total
+            tagged_total += result.total_costs
+            gap -= result.total_costs
 
             if ARGS.verbose:
-                table.add_row(result.name, result.get_formatted_total())
+                table.add_row(
+                    result.name,
+                    result.get_formatted_total_costs(),
+                    result.get_formatted_hosting_fee(),
+                    result.get_formatted_margin(),
+                )
             else:
-                console.print(result.get_formatted_total())
+                console.print(result.get_formatted_total_costs())
 
     if ARGS.verbose:
         console.print(table)
         tagged_average = locale.currency(tagged_total / len(CLIENTS), grouping=True)
-        formatted_margin = locale.currency(hosting_margin, grouping=True)
+        formatted_gap = locale.currency(gap, grouping=True)
         console.print(f"{ORG_NAME} - Total: {grand_total}", style="bold green")
         console.print(
             f"{ORG_NAME} - Tagged Average: {tagged_average}", style="bold yellow"
         )
-        console.print(
-            f"{ORG_NAME} - Hosting Margin: {formatted_margin}", style="bold red"
-        )
+        console.print(f"{ORG_NAME} - Untagged Gap: {formatted_gap}", style="bold red")
 
 
 if __name__ == "__main__":
@@ -127,9 +132,7 @@ if __name__ == "__main__":
     PARSER.add_argument(
         "-e", "--end-date", help="The End Date - format YYYY-MM-DD", required=True
     )
-    PARSER.add_argument(
-        "-c", "--client", help="Report on a single Client"
-    )
+    PARSER.add_argument("-c", "--client", help="Report on a single Client")
     PARSER.add_argument(
         "-v",
         "--verbose",
