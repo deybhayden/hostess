@@ -13,6 +13,33 @@ def get_cost_and_usage_total(metrics):
     return float(metrics["ResultsByTime"][0]["Total"]["UnblendedCost"]["Amount"])
 
 
+def get_tag_values(tag, value_prefix, start_date, end_date):
+    """For the given tag, return a list of all values that begin with the different
+    prefixes in AWS Cost Explorer for start & end dates."""
+    explorer = SESSION.client("ce")
+    values = []
+    next_token = None
+    get_tags_kwargs = {
+        "SearchString": value_prefix,
+        "TimePeriod": {"Start": start_date, "End": end_date},
+        "TagKey": tag,
+    }
+
+    while True:
+        if next_token:
+            get_tags_kwargs["NextPageToken"] = next_token
+
+        response = explorer.get_tags(**get_tags_kwargs)
+        values += response["Tags"]
+
+        if "NextPageToken" in response:
+            next_token = response["NextPageToken"]
+        else:
+            break
+
+    return values
+
+
 def create_cost_and_usage_function(client, start_date, end_date):
     """Creates a client-specific cost and usage reporting function to run in the executor.
     Returns the ClientTotal namedtuple containing results."""
