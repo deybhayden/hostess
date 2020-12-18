@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-CLI Tool to print out AWS hosting costs separated by client tag.
+CLI Tool to print out AWS Cost Explorer Dimension values.
 """
 import argparse
 from pprint import pprint

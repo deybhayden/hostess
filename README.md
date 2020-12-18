@@ -2,13 +2,15 @@
 
 CLI tool to separate AWS hosting costs by client for a given date range.
 
-## Installation
+## Development
 
-This script uses [asyncio](https://docs.python.org/3/library/asyncio.html), so Python 3+ is required to run it.
+This utility uses [asyncio](https://docs.python.org/3/library/asyncio.html), so Python 3+ is required to run it.
+
+Below is an easy setup using [Pipenv](https://github.com/pypa/pipenv).
 
 ```bash
-# ...set up a virtualenv and activate it...
-pip install -r requirements.txt
+pipenv --python 3.8
+pipenv install --dev
 ```
 
 ## Usage
@@ -19,5 +21,7 @@ The example below uses [AWS SSO CLI credentials](https://docs.aws.amazon.com/cli
 # you'll need awscli v2, your SSO URL & region and to have set that all up correctly
 aws configure sso
 aws sso login --profile my_profile
-./main.py -s 2020-04-01 -e 2020-05-01 -v
+pipenv shell
+pipenv install -e .
+hostess -s 2020-04-01 -e 2020-05-01 -v
 ```

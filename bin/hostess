@@ -10,8 +10,9 @@ import locale
 from rich.console import Console
 from rich.table import Table
 
-from config import ORG_NAME, CLIENTS
-from utils import Client, create_cost_and_usage_function
+from hostess.aws import create_cost_and_usage_function
+from hostess.client import Client
+from hostess.config import ORG_NAME, CLIENTS
 
 
 async def get_cost_and_usage_for_clients(executor):

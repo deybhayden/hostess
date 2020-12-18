@@ -50,4 +50,4 @@ CLIENTS = []
 if os.path.exists("config_private.py"):
     # Use config_private for your own personal settings - default to be git ignored.
     # Yup, intentionally using wildcard import to shadow the default values
-    from config_private import *
+    from hostess.config_private import *
