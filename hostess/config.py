@@ -47,7 +47,18 @@ ORG_NAME = "MegaCrew"
 #
 CLIENTS = []
 
-if os.path.exists("config_private.py"):
-    # Use config_private for your own personal settings - default to be git ignored.
-    # Yup, intentionally using wildcard import to shadow the default values
-    from hostess.config_private import *
+if "HOSTESS_CONFIG" in os.environ:
+    # Set the $HOSTESS_CONFIG variable to the filepath to use a custom
+    # Python config file for your own personal settings.
+    #
+    # Below recipe is pulled from Python Docs - Python 3.5+ support only
+    # https://docs.python.org/3/library/importlib.html#importing-a-source-file-directly
+    import importlib.util
+    import sys
+
+    spec = importlib.util.spec_from_file_location(
+        "hostess.config", os.environ["HOSTESS_CONFIG"]
+    )
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["hostess.config"] = module
+    spec.loader.exec_module(module)

@@ -61,6 +61,7 @@ cover/
 __pypackages__/
 
 # Environments
+.envrc
 .env
 .venv
 env/
@@ -68,6 +69,3 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-
-# Private config file
-hostess/config_private.py
