@@ -7,51 +7,11 @@ import asyncio
 import concurrent.futures
 import locale
 
-import boto3
 from rich.console import Console
 from rich.table import Table
 
 from config import ORG_NAME, CLIENTS
-from utils import Client
-
-locale.setlocale(locale.LC_ALL, "")
-
-SESSION = boto3.Session()
-
-
-def get_cost_and_usage_total(metrics):
-    """Returns Total dollar amount from Cost & Usage metrics response dict."""
-    return float(metrics["ResultsByTime"][0]["Total"]["UnblendedCost"]["Amount"])
-
-
-def create_cost_and_usage_function(client):
-    """Creates a client-specific cost and usage reporting function to run in the executor.
-    Returns the ClientTotal namedtuple containing results."""
-
-    explorer = SESSION.client("ce")
-
-    def get_client_cur():
-        if client.name == ORG_NAME:
-            metrics = explorer.get_cost_and_usage(
-                TimePeriod={"Start": ARGS.start_date, "End": ARGS.end_date},
-                Granularity="MONTHLY",
-                Metrics=["UnblendedCost"],
-            )
-            client.total_costs = get_cost_and_usage_total(metrics)
-        elif client.cur_filter:
-            metrics = explorer.get_cost_and_usage(
-                TimePeriod={"Start": ARGS.start_date, "End": ARGS.end_date},
-                Granularity="MONTHLY",
-                Metrics=["UnblendedCost"],
-                Filter=client.cur_filter,
-            )
-            client.total_costs = get_cost_and_usage_total(metrics)
-        else:
-            client.total_costs = 0
-
-        return client
-
-    return get_client_cur
+from utils import Client, create_cost_and_usage_function
 
 
 async def get_cost_and_usage_for_clients(executor):
@@ -59,7 +19,9 @@ async def get_cost_and_usage_for_clients(executor):
     loop = asyncio.get_event_loop()
     blocking_tasks = []
 
-    cur_func = create_cost_and_usage_function(Client(ORG_NAME, order=-1))
+    cur_func = create_cost_and_usage_function(
+        Client(ORG_NAME, order=-1), ARGS.start_date, ARGS.end_date
+    )
     blocking_tasks.append(loop.run_in_executor(executor, cur_func))
 
     for order, client in enumerate(CLIENTS):
@@ -67,7 +29,9 @@ async def get_cost_and_usage_for_clients(executor):
             continue
 
         client.order = order
-        cur_func = create_cost_and_usage_function(client)
+        cur_func = create_cost_and_usage_function(
+            client, ARGS.start_date, ARGS.end_date
+        )
         blocking_tasks.append(loop.run_in_executor(executor, cur_func))
 
     completed, _pending = await asyncio.wait(blocking_tasks)
@@ -113,16 +77,21 @@ def main():
 
     if ARGS.verbose:
         console.print(table)
-        tagged_average = locale.currency(tagged_total / len(CLIENTS), grouping=True)
-        formatted_gap = locale.currency(gap, grouping=True)
-        console.print(f"{ORG_NAME} - Total: {grand_total}", style="bold green")
-        console.print(
-            f"{ORG_NAME} - Tagged Average: {tagged_average}", style="bold yellow"
-        )
-        console.print(f"{ORG_NAME} - Untagged Gap: {formatted_gap}", style="bold red")
+        if not ARGS.client:
+            # Print summary AWS cost total for date range - included avg & untagged costs
+            tagged_average = locale.currency(tagged_total / len(CLIENTS), grouping=True)
+            formatted_gap = locale.currency(gap, grouping=True)
+            console.print(f"{ORG_NAME} - Total: {grand_total}", style="bold green")
+            console.print(
+                f"{ORG_NAME} - Tagged Average: {tagged_average}", style="bold yellow"
+            )
+            console.print(
+                f"{ORG_NAME} - Untagged Gap: {formatted_gap}", style="bold red"
+            )
 
 
 if __name__ == "__main__":
+    locale.setlocale(locale.LC_ALL, "")
     PARSER = argparse.ArgumentParser(
         description="Print out per-client AWS hosting cost details."
     )
