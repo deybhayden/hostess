@@ -4,7 +4,7 @@ hostess client class for client information organization
 import locale
 
 
-class Client(object):
+class Client:
     """Client helper class to organize client details and AWS totals."""
 
     def __init__(self, name, order=0, cur_filter=None, hosting_fee=0, total_costs=0):

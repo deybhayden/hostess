@@ -10,7 +10,7 @@ import locale
 from rich.console import Console
 from rich.table import Table
 
-from hostess.aws import create_cost_and_usage_function
+from hostess.aws import AWSSession
 from hostess.client import Client
 from hostess.config import ORG_NAME, CLIENTS
 
@@ -20,9 +20,7 @@ async def get_cost_and_usage_for_clients(executor):
     loop = asyncio.get_event_loop()
     blocking_tasks = []
 
-    cur_func = create_cost_and_usage_function(
-        Client(ORG_NAME, order=-1), ARGS.start_date, ARGS.end_date
-    )
+    cur_func = SESSION.create_cost_and_usage_function(Client(ORG_NAME, order=-1))
     blocking_tasks.append(loop.run_in_executor(executor, cur_func))
 
     for order, client in enumerate(CLIENTS):
@@ -30,9 +28,7 @@ async def get_cost_and_usage_for_clients(executor):
             continue
 
         client.order = order
-        cur_func = create_cost_and_usage_function(
-            client, ARGS.start_date, ARGS.end_date
-        )
+        cur_func = SESSION.create_cost_and_usage_function(client)
         blocking_tasks.append(loop.run_in_executor(executor, cur_func))
 
     completed, _pending = await asyncio.wait(blocking_tasks)
@@ -110,4 +106,5 @@ if __name__ == "__main__":
         action="store_true",
     )
     ARGS = PARSER.parse_args()
+    SESSION = AWSSession(ARGS.start_date, ARGS.end_date)
     main()
