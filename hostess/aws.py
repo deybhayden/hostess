@@ -59,6 +59,8 @@ class AWSSession:
                 )
                 client.total_costs = get_cost_and_usage_total(metrics)
             elif client.cur_filter:
+                # Ensure all tagged values are captured for the date range
+                self.update_tag_values(client)
                 metrics = explorer.get_cost_and_usage(
                     TimePeriod={"Start": self.start_date, "End": self.end_date},
                     Granularity="MONTHLY",
@@ -72,3 +74,30 @@ class AWSSession:
             return client
 
         return get_client_cur
+
+    def update_tag_values(self, client):
+        """For the passed date range, find all valid Tags Values and
+        update the client.cur_filter with the values."""
+        updated = False
+        for key in client.cur_filter:
+            if key == "Tags":
+                self._update_tag_object(client.cur_filter[key])
+                updated = True
+            elif key in ("And", "Or"):
+                # Go a level deeper and search for Tags
+                for obj in client.cur_filter[key]:
+                    if "Tags" in obj:
+                        self._update_tag_object(obj["Tags"])
+                        updated = True
+                        break
+
+            if updated:
+                break
+
+    def _update_tag_object(self, tag_object):
+        """For the given Tags Filter object, update the values list with all
+        tagged values in the AWSSession date range."""
+        new_values = []
+        for value in tag_object["Values"]:
+            new_values += self.get_tag_values(tag_object["Key"], value)
+        tag_object["Values"] = new_values
