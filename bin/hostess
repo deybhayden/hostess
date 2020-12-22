@@ -64,31 +64,28 @@ def main():
             tagged_total += client.total_costs
             gap -= client.total_costs
 
-            if ARGS.verbose:
+            if ARGS.debug:
                 console.print(f"{client.name} CUR Filter:", style="bold red")
                 console.log(client.cur_filter, style="green")
-                table.add_row(
-                    client.name,
-                    client.get_formatted_total_costs(),
-                    client.get_formatted_hosting_fee(),
-                    client.get_formatted_margin(),
-                )
-            else:
-                console.print(client.get_formatted_total_costs())
 
-    if ARGS.verbose:
-        console.print(table)
-        if not ARGS.client:
-            # Print summary AWS cost total for date range - included avg & untagged costs
-            tagged_average = locale.currency(tagged_total / len(CLIENTS), grouping=True)
-            formatted_gap = locale.currency(gap, grouping=True)
-            console.print(f"{ORG_NAME} - Total: {grand_total}", style="bold green")
-            console.print(
-                f"{ORG_NAME} - Tagged Average: {tagged_average}", style="bold yellow"
+            table.add_row(
+                client.name,
+                client.get_formatted_total_costs(),
+                client.get_formatted_hosting_fee(),
+                client.get_formatted_margin(),
             )
-            console.print(
-                f"{ORG_NAME} - Untagged Gap: {formatted_gap}", style="bold red"
-            )
+
+    console.print(table)
+
+    if not ARGS.client:
+        # Print summary AWS cost total for date range - included avg & untagged costs
+        tagged_average = locale.currency(tagged_total / len(CLIENTS), grouping=True)
+        formatted_gap = locale.currency(gap, grouping=True)
+        console.print(f"{ORG_NAME} - Total: {grand_total}", style="bold green")
+        console.print(
+            f"{ORG_NAME} - Tagged Average: {tagged_average}", style="bold yellow"
+        )
+        console.print(f"{ORG_NAME} - Untagged Gap: {formatted_gap}", style="bold red")
 
 
 if __name__ == "__main__":
@@ -104,9 +101,9 @@ if __name__ == "__main__":
     )
     PARSER.add_argument("-c", "--client", help="Report on a single Client")
     PARSER.add_argument(
-        "-v",
-        "--verbose",
-        help="Display client names and organization metrics in printed results",
+        "-d",
+        "--debug",
+        help="Display programming debug information",
         action="store_true",
     )
     ARGS = PARSER.parse_args()
