@@ -48,29 +48,33 @@ def main():
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=10)
     event_loop = asyncio.get_event_loop()
 
-    results = event_loop.run_until_complete(get_cost_and_usage_for_clients(executor))
+    client_results = event_loop.run_until_complete(
+        get_cost_and_usage_for_clients(executor)
+    )
     grand_total, tagged_total, gap = "", 0, 0
 
-    for result in sorted(results, key=lambda r: r.order):
+    for client in sorted(client_results, key=lambda r: r.order):
         # If the result is for the entire organization, it is considered
         # the grand total for the time period and the hosting margin is calculated
         # based on that total.
-        if result.name == ORG_NAME and result.order == -1:
-            grand_total = result.get_formatted_total_costs()
-            gap = result.total_costs
+        if client.name == ORG_NAME and client.order == -1:
+            grand_total = client.get_formatted_total_costs()
+            gap = client.total_costs
         else:
-            tagged_total += result.total_costs
-            gap -= result.total_costs
+            tagged_total += client.total_costs
+            gap -= client.total_costs
 
             if ARGS.verbose:
+                console.print(f"{client.name} CUR Filter:", style="bold red")
+                console.log(client.cur_filter, style="green")
                 table.add_row(
-                    result.name,
-                    result.get_formatted_total_costs(),
-                    result.get_formatted_hosting_fee(),
-                    result.get_formatted_margin(),
+                    client.name,
+                    client.get_formatted_total_costs(),
+                    client.get_formatted_hosting_fee(),
+                    client.get_formatted_margin(),
                 )
             else:
-                console.print(result.get_formatted_total_costs())
+                console.print(client.get_formatted_total_costs())
 
     if ARGS.verbose:
         console.print(table)
