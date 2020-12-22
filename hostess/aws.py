@@ -100,4 +100,7 @@ class AWSSession:
         new_values = []
         for value in tag_object["Values"]:
             new_values += self.get_tag_values(tag_object["Key"], value)
-        tag_object["Values"] = new_values
+
+        if new_values:
+            # Only update values if it's a non-empty list to avoid a Boto error
+            tag_object["Values"] = new_values
