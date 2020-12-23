@@ -36,8 +36,8 @@ async def get_cost_and_usage_for_clients(executor):
     return results
 
 
-def main():
-    """Loop through Client tags for the given date range and print results."""
+def setup_output():
+    """Create & return Rich Text Output Console & Table."""
     console = Console()
     table = Table(show_header=True, header_style="bold magenta")
     table.add_column("Client")
@@ -45,12 +45,45 @@ def main():
     table.add_column("Hosting Fee", justify="right")
     table.add_column("Margin", justify="right")
 
+    return console, table
+
+
+def save_to_csvfile(table):
+    """Save Rich.Table as CSV file to the filepath ARGS.file."""
+    import csv
+
+    with open(ARGS.file, "w") as csvfile:
+        csv_writer = csv.writer(csvfile)
+        headers = []
+        rows = []
+
+        for col_index, column in enumerate(table.columns):
+            headers.append(column.header)
+            for row_index, cell in enumerate(column.cells):
+                if not col_index:
+                    row = []
+                    rows.append(row)
+                else:
+                    row = rows[row_index]
+
+                row.insert(col_index, cell)
+
+        csv_writer.writerow(headers)
+        csv_writer.writerows(rows)
+
+
+def main():
+    """Loop through Client tags for the given date range and print results."""
+    console, table = setup_output()
+
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=10)
     event_loop = asyncio.get_event_loop()
 
-    client_results = event_loop.run_until_complete(
-        get_cost_and_usage_for_clients(executor)
-    )
+    with console.status("[cyan]Calling out to AWS Cost Explorer..."):
+        client_results = event_loop.run_until_complete(
+            get_cost_and_usage_for_clients(executor)
+        )
+
     grand_total, tagged_total, gap = "", 0, 0
 
     for client in sorted(client_results, key=lambda r: r.order):
@@ -65,7 +98,7 @@ def main():
             gap -= client.total_costs
 
             if ARGS.debug:
-                console.print(f"{client.name} CUR Filter:", style="bold red")
+                console.print(f"[bold red]{client.name} CUR Filter:")
                 console.log(client.cur_filter, style="green")
 
             table.add_row(
@@ -82,11 +115,14 @@ def main():
         # Print summary AWS cost total for date range - included avg & untagged costs
         tagged_average = locale.currency(tagged_total / len(CLIENTS), grouping=True)
         formatted_gap = locale.currency(gap, grouping=True)
-        console.print(f"{ORG_NAME} - Total: {grand_total}", style="bold green")
-        console.print(
-            f"{ORG_NAME} - Tagged Average: {tagged_average}", style="bold yellow"
-        )
-        console.print(f"{ORG_NAME} - Untagged Gap: {formatted_gap}", style="bold red")
+        console.print(f"[bold green]{ORG_NAME} - Total: {grand_total}")
+        console.print(f"[bold yellow]{ORG_NAME} - Tagged Average: {tagged_average}")
+        console.print(f"[bold red]{ORG_NAME} - Untagged Gap: {formatted_gap}")
+
+    if ARGS.file:
+        # with console.status(f"[cyan]Saving table as a CSV file to {ARGS.file}..."):
+        save_to_csvfile(table)
+        console.print(f"[bold cyan]Saved table as a CSV file to {ARGS.file}")
 
 
 if __name__ == "__main__":
@@ -101,6 +137,9 @@ if __name__ == "__main__":
         "-e", "--end-date", help="The End Date - format YYYY-MM-DD", required=True
     )
     PARSER.add_argument("-c", "--client", help="Report on a single Client")
+    PARSER.add_argument(
+        "-f", "--file", help="Save report as a CSV file to FILE", metavar="FILE"
+    )
     PARSER.add_argument(
         "-d",
         "--debug",
