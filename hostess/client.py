@@ -24,4 +24,9 @@ class Client:
 
     def get_formatted_margin(self):
         """Returns a locale appropriate currency formatted hosting margin string."""
-        return locale.currency(self.hosting_fee - self.total_costs, grouping=True)
+        return locale.currency(self.margin, grouping=True)
+
+    @property
+    def margin(self):
+        """Returns hosting margin."""
+        return self.hosting_fee - self.total_costs
