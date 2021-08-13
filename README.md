@@ -9,7 +9,7 @@ This utility uses [asyncio](https://docs.python.org/3/library/asyncio.html), so 
 Below is an easy setup using [Pipenv](https://github.com/pypa/pipenv).
 
 ```bash
-pipenv --python 3.8
+pipenv --python 3.9
 pipenv install --dev
 ```
 
