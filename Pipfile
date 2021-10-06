@@ -6,9 +6,10 @@ name = "pypi"
 [packages]
 boto3 = ">=1.15.6"
 rich = ">=7.1"
-hostess-deybhayden = {editable = true, path = "."}
+hostess-deybhayden = { editable = true, path = "." }
 
 [dev-packages]
+black = "21.9b0"
 
 [requires]
 python_version = "3.9"
