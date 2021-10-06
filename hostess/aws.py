@@ -98,8 +98,15 @@ class AWSSession:
         """For the given Tags Filter object, update the values list with all
         tagged values in the AWSSession date range."""
         new_values = []
+        exclude_values = tag_object.pop("Exclude", "")
         for value in tag_object["Values"]:
-            new_values += self.get_tag_values(tag_object["Key"], value)
+            tag_values = self.get_tag_values(tag_object["Key"], value)
+            if exclude_values:
+                new_values += [
+                    v for v in tag_values if not v.startswith(exclude_values)
+                ]
+            else:
+                new_values += tag_values
 
         if new_values:
             # Only update values if it's a non-empty list to avoid a Boto error
