@@ -9,20 +9,20 @@ This utility uses [asyncio](https://docs.python.org/3/library/asyncio.html), so 
 Below is an easy setup using [Pipenv](https://github.com/pypa/pipenv).
 
 ```bash
-pipenv --python 3.9
+pipenv --python 3.10.2
 pipenv install --dev
 ```
 
-:warning: This tool has only been tested on Python 3.8+.
+:warning: This tool supports Python 3.8+ and up.
 
 ### Private Configuration
 
 By default, there is an empty `hostess.config` Python file that contains example config variables and possible values. You can override these defaults by setting the `$HOSTESS_CONFIG` environment variable to the filepath of your own organization's client configuration. Below example uses [direnv](https://direnv.net/) to set per directory environment variables.
 
 ```bash
-mkdir -p ~/Repos
-cd ~/Repos
-git clone git@github.com:deybhayden/hostess.git
+mkdir -p ~/code
+cd ~/code
+gh repo clone deybhayden/hostess
 cd hostess/
 # example assumes a Python file is located at ~/.config/hostess/config.py
 echo "export HOSTESS_CONFIG=\"$HOME/.config/hostess/config.py\"" > .envrc

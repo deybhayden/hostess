@@ -17,7 +17,7 @@ from hostess.config import ORG_NAME, CLIENTS
 
 async def get_cost_and_usage_for_clients(executor):
     """Non-blocking function to grab cost and usage data for tagged clients in AWS."""
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_event_loop_policy().get_event_loop()
     blocking_tasks = []
 
     cur_func = SESSION.create_cost_and_usage_function(Client(ORG_NAME, order=-1))
@@ -31,7 +31,7 @@ async def get_cost_and_usage_for_clients(executor):
         cur_func = SESSION.create_cost_and_usage_function(client)
         blocking_tasks.append(loop.run_in_executor(executor, cur_func))
 
-    completed, _pending = await asyncio.wait(blocking_tasks)
+    completed, _ = await asyncio.wait(blocking_tasks)
     results = [t.result() for t in completed]
     return results
 
@@ -77,7 +77,7 @@ def main():
     console, table = setup_output()
 
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=10)
-    event_loop = asyncio.get_event_loop()
+    event_loop = asyncio.get_event_loop_policy().get_event_loop()
 
     with console.status("[cyan]Calling out to AWS Cost Explorer..."):
         client_results = event_loop.run_until_complete(
