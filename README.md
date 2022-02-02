@@ -25,7 +25,7 @@ cd ~/code
 gh repo clone deybhayden/hostess
 cd hostess/
 # example assumes a Python file is located at ~/.config/hostess/config.py
-echo "export HOSTESS_CONFIG=\"$HOME/.config/hostess/config.py\"" > .envrc
+echo "export AWS_PROFILE=\"my_profile\"\nexport HOSTESS_CONFIG=\"$HOME/.config/hostess/config.py\"" > .envrc
 direnv allow
 ```
 
